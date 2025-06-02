@@ -1,0 +1,160 @@
+.profile-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #fff;
+}
+
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.profile-avatar-section {
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #f0f0f0;
+}
+
+.profile-info-section {
+    flex-grow: 1;
+}
+
+.profile-name {
+    font-size: 1.25rem;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+}
+
+.profile-id {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-id span {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.profile-content {
+    padding: 1rem 0;
+}
+
+.profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 6rem;
+    max-width: 800px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #0066cc;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    width: 100%;
+    background-color: #fff;
+}
+
+/* Email field is now in third position */
+.form-group:nth-child(3) input {
+    width: 300px; /* Email field wider */
+}
+
+.profile-value {
+    color: #333;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #0066cc;
+    background-color: #e6f0ff;
+    border-radius: 4px;
+}
+
+/* Email value is now in third position */
+.form-group:nth-child(3) .profile-value {
+    width: 300px; /* Email value wider */
+}
+
+/* Role value is still in fourth position */
+.form-group:nth-child(4) .profile-value {
+    width: 150px; /* Role value shorter */
+}
+
+.profile-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    grid-column: 1 / -1;
+}
+
+.edit-btn, .save-btn, .cancel-btn {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+}
+
+.loading-message,
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.1rem;
+}
+
+.loading-message {
+    color: #666;
+}
+
+.error-message {
+    color: #dc3545;
+} 
