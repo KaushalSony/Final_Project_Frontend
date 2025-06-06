@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://capg-final-proj-backend-gdcvebfgdjbggte9.westindia-01.azurewebsites.net/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://final-proj-backend-evh7fvdaddhtgqfy.westindia-01.azurewebsites.net/api';
 
 // Token management
 const getToken = () => localStorage.getItem('token');
