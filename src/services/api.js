@@ -87,7 +87,7 @@ export const register = async (userData) => {
     }
     
     if (!response.ok) {
-      const errorMessage = data.message || data.error || 'Registration failed';
+      const errorMessage = data.message || data.error || 'Email Already Exists';
       // Check for email service configuration error
       if (errorMessage.includes('SMTP credentials are not set')) {
         throw new Error('Registration is currently unavailable. Please try again later or contact support.');
