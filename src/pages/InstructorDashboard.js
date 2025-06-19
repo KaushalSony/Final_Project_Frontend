@@ -58,7 +58,9 @@ const InstructorDashboard = () => {
       const course = courses.find(c => c.courseId === courseId);
       if (course && course.mediaUrl && course.mediaUrl.startsWith('http')) {
         const fileName = course.mediaUrl.split('/').pop().split('?')[0];
-        await deleteFile(fileName);
+        if (fileName && fileName.trim() !== '') {
+          await deleteFile(fileName);
+        }
       }
       await deleteCourse(courseId);
       setCourses(prev => prev.filter(c => c.courseId !== courseId));
