@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createCourse, getUserIdByEmail } from '../services/api';
+import { createCourse, getUserIdByEmail, uploadFile, listFiles, deleteFile, getUserRole } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const AddCourse = () => {
@@ -11,7 +11,13 @@ const AddCourse = () => {
   const [success, setSuccess] = useState('');
   const [userId, setUserId] = useState('');
   const [loadingUser, setLoadingUser] = useState(true);
+  const [materialMode, setMaterialMode] = useState('file'); // 'file' or 'url'
+  const [file, setFile] = useState(null);
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const [fileUploadError, setFileUploadError] = useState('');
+  const [fileList, setFileList] = useState([]);
   const navigate = useNavigate();
+  const role = getUserRole();
 
   useEffect(() => {
     // Get email from token
@@ -37,7 +43,12 @@ const AddCourse = () => {
       setError('No authentication token found');
       setLoadingUser(false);
     }
-  }, []);
+    if (role === 'Instructor') {
+      listFiles().then(res => {
+        setFileList(res.blobs || []);
+      }).catch(() => setFileList([]));
+    }
+  }, [role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,6 +66,41 @@ const AddCourse = () => {
       setError(err.message || 'Failed to create course');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    setFileUploadError('');
+    setFileUploadLoading(true);
+    try {
+      // If a file is already uploaded, delete it first
+      if (mediaUrl && mediaUrl.startsWith('http')) {
+        const oldFileName = mediaUrl.split('/').pop().split('?')[0];
+        await deleteFile(oldFileName);
+        setMediaUrl('');
+      }
+      if (!file) throw new Error('No file selected');
+      const res = await uploadFile(file);
+      setMediaUrl(res.fileUrl);
+      setSuccess('File uploaded and URL set!');
+      // Refresh file list
+      const filesRes = await listFiles();
+      setFileList(filesRes.blobs || []);
+    } catch (err) {
+      setFileUploadError(err.message || 'Failed to upload file');
+    } finally {
+      setFileUploadLoading(false);
+    }
+  };
+
+  const handleDeleteFile = async (fileName) => {
+    if (!window.confirm('Delete this file?')) return;
+    try {
+      await deleteFile(fileName);
+      setFileList(prev => prev.filter(f => f !== fileName));
+      if (mediaUrl.includes(fileName)) setMediaUrl('');
+    } catch (err) {
+      setFileUploadError(err.message || 'Failed to delete file');
     }
   };
 
@@ -88,16 +134,45 @@ const AddCourse = () => {
             placeholder="Enter course description"
           />
         </div>
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Media URL <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
-          <input
-            type="url"
-            value={mediaUrl}
-            onChange={e => setMediaUrl(e.target.value)}
-            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #bbb' }}
-            placeholder="https://..."
-          />
-        </div>
+        {role === 'Instructor' && (
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Course Material</label>
+            <div style={{ marginBottom: 8 }}>
+              <button type="button" onClick={() => setMaterialMode('file')} style={{ marginRight: 8, background: materialMode === 'file' ? '#2563eb' : '#eee', color: materialMode === 'file' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Upload File</button>
+              <button type="button" onClick={async () => {
+                if (materialMode === 'file' && mediaUrl && mediaUrl.startsWith('http')) {
+                  const oldFileName = mediaUrl.split('/').pop().split('?')[0];
+                  await deleteFile(oldFileName);
+                  setMediaUrl('');
+                }
+                setMaterialMode('url');
+              }} style={{ background: materialMode === 'url' ? '#2563eb' : '#eee', color: materialMode === 'url' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Direct URL</button>
+            </div>
+            {materialMode === 'file' ? (
+              <div>
+                <input type="file" onChange={e => setFile(e.target.files[0])} disabled={fileUploadLoading} />
+                <button type="button" onClick={handleFileUpload} disabled={fileUploadLoading || !file} style={{ marginLeft: 8 }}>Upload</button>
+                {fileUploadLoading && <span style={{ marginLeft: 8 }}>Uploading...</span>}
+                {fileUploadError && <div style={{ color: '#d32f2f', marginTop: 6 }}>{fileUploadError}</div>}
+                {mediaUrl && mediaUrl.startsWith('http') && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4 }}>Uploaded File:</div>
+                    <a href={mediaUrl} target="_blank" rel="noopener noreferrer">{mediaUrl.split('/').pop()}</a>
+                    <button type="button" onClick={() => setMediaUrl('')} style={{ marginLeft: 8, color: '#d32f2f', border: 'none', background: 'none', cursor: 'pointer' }}>Remove</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <input
+                type="url"
+                value={mediaUrl}
+                onChange={e => setMediaUrl(e.target.value)}
+                style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #bbb' }}
+                placeholder="https://..."
+              />
+            )}
+          </div>
+        )}
         {error && <div style={{ color: '#d32f2f', marginBottom: 12, textAlign: 'center' }}>{error}</div>}
         {success && <div style={{ color: '#388e3c', marginBottom: 12, textAlign: 'center' }}>{success}</div>}
         <button
