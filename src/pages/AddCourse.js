@@ -15,7 +15,7 @@ const AddCourse = () => {
   const [file, setFile] = useState(null);
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const [fileUploadError, setFileUploadError] = useState('');
-  const [fileList, setFileList] = useState([]);
+  const [, setFileList] = useState([]);
   const navigate = useNavigate();
   const role = getUserRole();
 
@@ -90,17 +90,6 @@ const AddCourse = () => {
       setFileUploadError(err.message || 'Failed to upload file');
     } finally {
       setFileUploadLoading(false);
-    }
-  };
-
-  const handleDeleteFile = async (fileName) => {
-    if (!window.confirm('Delete this file?')) return;
-    try {
-      await deleteFile(fileName);
-      setFileList(prev => prev.filter(f => f !== fileName));
-      if (mediaUrl.includes(fileName)) setMediaUrl('');
-    } catch (err) {
-      setFileUploadError(err.message || 'Failed to delete file');
     }
   };
 
