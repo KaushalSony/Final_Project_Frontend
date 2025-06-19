@@ -69,10 +69,19 @@ const StudentDashboard = () => {
                 className="modal-btn view-material"
                 onClick={() => {
                   let url = selectedCourse.mediaUrl;
+                  if (!url || url.trim() === '') {
+                    alert('No course material available.');
+                    return;
+                  }
                   if (!/^https?:\/\//i.test(url)) {
                     url = 'https://' + url;
                   }
-                  window.open(url, '_blank', 'noopener,noreferrer');
+                  try {
+                    new URL(url); // Validate URL
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  } catch {
+                    alert('Invalid course material URL.');
+                  }
                 }}
               >
                 View Course Material
