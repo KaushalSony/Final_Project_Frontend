@@ -734,3 +734,54 @@ export const createUser = async (userData) => {
   }
   return response.json();
 };
+
+// File upload to Azure Blob Storage
+export const uploadFile = async (file) => {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await fetch(`${API_BASE_URL}/file/upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to upload file');
+  }
+  return await response.json();
+};
+
+// List files in the Azure Blob container
+export const listFiles = async () => {
+  const token = getToken();
+  const response = await fetch(`${API_BASE_URL}/file/verify-container`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to list files');
+  }
+  return await response.json();
+};
+
+// Delete a file from Azure Blob Storage
+export const deleteFile = async (fileName) => {
+  const token = getToken();
+  const response = await fetch(`${API_BASE_URL}/file/${encodeURIComponent(fileName)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to delete file');
+  }
+  return await response.json();
+};
