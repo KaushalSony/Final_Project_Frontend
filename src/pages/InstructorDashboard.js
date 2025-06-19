@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/InstructorDashboard.css';
-import { getInstructorCourses, getUserIdByEmail, deleteCourse } from '../services/api';
+import { getInstructorCourses, getUserIdByEmail, deleteCourse, deleteFile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const InstructorDashboard = () => {
@@ -54,6 +54,12 @@ const InstructorDashboard = () => {
   const handleDeleteCourse = async (courseId) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
+      // Find the course to get its mediaUrl
+      const course = courses.find(c => c.courseId === courseId);
+      if (course && course.mediaUrl && course.mediaUrl.startsWith('http')) {
+        const fileName = course.mediaUrl.split('/').pop().split('?')[0];
+        await deleteFile(fileName);
+      }
       await deleteCourse(courseId);
       setCourses(prev => prev.filter(c => c.courseId !== courseId));
     } catch (err) {
@@ -100,10 +106,19 @@ const InstructorDashboard = () => {
                 className="modal-btn view-material"
                 onClick={() => {
                   let url = selectedCourse.mediaUrl;
+                  if (!url || url.trim() === '') {
+                    alert('No course material available.');
+                    return;
+                  }
                   if (!/^https?:\/\//i.test(url)) {
                     url = 'https://' + url;
                   }
-                  window.open(url, '_blank', 'noopener,noreferrer');
+                  try {
+                    new URL(url); // Validate URL
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  } catch {
+                    alert('Invalid course material URL.');
+                  }
                 }}
               >
                 View Course Material
