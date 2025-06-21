@@ -6,6 +6,7 @@ const AddCourse = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
+  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -57,6 +58,18 @@ const AddCourse = () => {
     setLoading(true);
     try {
       await createCourse({ title, description, mediaUrl, instructorId: userId });
+
+      // If a file was uploaded but is not the final mediaUrl, it was orphaned and should be deleted.
+      if (uploadedFileUrl && uploadedFileUrl !== mediaUrl) {
+        try {
+          const orphanedFileName = decodeURIComponent(uploadedFileUrl.split('/').pop().split('?')[0]);
+          await deleteFile(orphanedFileName);
+        } catch (deleteError) {
+          // Log error but don't block success message
+          console.error("Failed to delete orphaned file.", deleteError);
+        }
+      }
+
       setSuccess('Course created successfully!');
       setTitle('');
       setDescription('');
@@ -73,21 +86,23 @@ const AddCourse = () => {
     setFileUploadError('');
     setFileUploadLoading(true);
     try {
-      // If a file is already uploaded, delete it first
-      if (mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
-        const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
+      // If a file was already uploaded in this session, delete it before uploading the new one.
+      if (uploadedFileUrl && uploadedFileUrl.includes('.blob.core.windows.net')) {
+        const oldFileName = decodeURIComponent(uploadedFileUrl.split('/').pop().split('?')[0]);
         await deleteFile(oldFileName);
-        setMediaUrl('');
       }
+
       if (!file) throw new Error('No file selected');
       const res = await uploadFile(file);
       setMediaUrl(res.fileUrl);
+      setUploadedFileUrl(res.fileUrl); // Track the uploaded file
       setSuccess('File uploaded and URL set!');
       // Refresh file list
       const filesRes = await listFiles();
       setFileList(filesRes.blobs || []);
     } catch (err) {
       setFileUploadError(err.message || 'Failed to upload file');
+      setUploadedFileUrl(''); // Clear on failure
     } finally {
       setFileUploadLoading(false);
     }
@@ -128,14 +143,7 @@ const AddCourse = () => {
             <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Course Material</label>
             <div style={{ marginBottom: 8 }}>
               <button type="button" onClick={() => setMaterialMode('file')} style={{ marginRight: 8, background: materialMode === 'file' ? '#2563eb' : '#eee', color: materialMode === 'file' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Upload File</button>
-              <button type="button" onClick={async () => {
-                if (materialMode === 'file' && mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
-                  const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
-                  await deleteFile(oldFileName);
-                  setMediaUrl('');
-                }
-                setMaterialMode('url');
-              }} style={{ background: materialMode === 'url' ? '#2563eb' : '#eee', color: materialMode === 'url' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Direct URL</button>
+              <button type="button" onClick={() => setMaterialMode('url')} style={{ background: materialMode === 'url' ? '#2563eb' : '#eee', color: materialMode === 'url' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Direct URL</button>
             </div>
             {materialMode === 'file' ? (
               <div>
