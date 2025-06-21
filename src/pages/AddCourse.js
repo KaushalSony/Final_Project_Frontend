@@ -175,4 +175,4 @@ const AddCourse = () => {
   );
 };
 
-export default AddCourse; 
+export default AddCourse;
