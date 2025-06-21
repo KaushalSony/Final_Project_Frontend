@@ -99,8 +99,8 @@ const EditCourse = () => {
     setFileUploadLoading(true);
     try {
       // If a file is already uploaded, delete it first
-      if (mediaUrl && mediaUrl.startsWith('http')) {
-        const oldFileName = mediaUrl.split('/').pop().split('?')[0];
+      if (mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
+        const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
         await deleteFile(oldFileName);
         setMediaUrl('');
       }
@@ -151,8 +151,8 @@ const EditCourse = () => {
             <div style={{ marginBottom: 8 }}>
               <button type="button" onClick={() => setMaterialMode('file')} style={{ marginRight: 8, background: materialMode === 'file' ? '#2563eb' : '#eee', color: materialMode === 'file' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Upload File</button>
               <button type="button" onClick={async () => {
-                if (materialMode === 'file' && mediaUrl && mediaUrl.startsWith('http')) {
-                  const oldFileName = mediaUrl.split('/').pop().split('?')[0];
+                if (materialMode === 'file' && mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
+                  const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
                   await deleteFile(oldFileName);
                   setMediaUrl('');
                 }
@@ -170,7 +170,6 @@ const EditCourse = () => {
                   <div style={{ marginTop: 10 }}>
                     <div style={{ fontWeight: 500, marginBottom: 4 }}>Uploaded File:</div>
                     <a href={mediaUrl} target="_blank" rel="noopener noreferrer">{mediaUrl.split('/').pop()}</a>
-                    <button type="button" onClick={() => setMediaUrl('')} style={{ marginLeft: 8, color: '#d32f2f', border: 'none', background: 'none', cursor: 'pointer' }}>Remove</button>
                   </div>
                 )}
               </div>
