@@ -7,6 +7,7 @@ const EditCourse = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
+  const [originalMediaUrl, setOriginalMediaUrl] = useState('');
   const [userId, setUserId] = useState('');
   const [loadingUser, setLoadingUser] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,7 @@ const EditCourse = () => {
           setTitle(course.title || '');
           setDescription(course.description || '');
           setMediaUrl(course.mediaUrl || '');
+          setOriginalMediaUrl(course.mediaUrl || '');
         } else {
           setError('Course not found');
         }
@@ -79,6 +81,16 @@ const EditCourse = () => {
     setSuccess('');
     setLoading(true);
     try {
+      // If the original mediaUrl was a blob file and it has been changed, delete the old file.
+      if (originalMediaUrl && originalMediaUrl.includes('.blob.core.windows.net') && originalMediaUrl !== mediaUrl) {
+        try {
+          const oldFileName = decodeURIComponent(originalMediaUrl.split('/').pop().split('?')[0]);
+          await deleteFile(oldFileName);
+        } catch (deleteError) {
+          console.error("Failed to delete old file, but proceeding with course update.", deleteError);
+        }
+      }
+
       await updateCourse(courseId, {
         title,
         description,
@@ -98,12 +110,6 @@ const EditCourse = () => {
     setFileUploadError('');
     setFileUploadLoading(true);
     try {
-      // If a file is already uploaded, delete it first
-      if (mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
-        const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
-        await deleteFile(oldFileName);
-        setMediaUrl('');
-      }
       if (!file) throw new Error('No file selected');
       const res = await uploadFile(file);
       setMediaUrl(res.fileUrl);
@@ -150,14 +156,7 @@ const EditCourse = () => {
             <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Course Material</label>
             <div style={{ marginBottom: 8 }}>
               <button type="button" onClick={() => setMaterialMode('file')} style={{ marginRight: 8, background: materialMode === 'file' ? '#2563eb' : '#eee', color: materialMode === 'file' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Upload File</button>
-              <button type="button" onClick={async () => {
-                if (materialMode === 'file' && mediaUrl && mediaUrl.includes('.blob.core.windows.net')) {
-                  const oldFileName = decodeURIComponent(mediaUrl.split('/').pop().split('?')[0]);
-                  await deleteFile(oldFileName);
-                  setMediaUrl('');
-                }
-                setMaterialMode('url');
-              }} style={{ background: materialMode === 'url' ? '#2563eb' : '#eee', color: materialMode === 'url' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Direct URL</button>
+              <button type="button" onClick={() => setMaterialMode('url')} style={{ background: materialMode === 'url' ? '#2563eb' : '#eee', color: materialMode === 'url' ? '#fff' : '#222', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}>Direct URL</button>
             </div>
             {materialMode === 'file' ? (
               <div>
@@ -198,4 +197,4 @@ const EditCourse = () => {
   );
 };
 
-export default EditCourse; 
+export default EditCourse;
